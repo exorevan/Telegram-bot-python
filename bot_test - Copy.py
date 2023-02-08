@@ -3,7 +3,6 @@ import random
 
 import numpy as np
 from aiogram.types import InputFile
-import datetime
 
 import SQLfunctions
 import psycopg2 as psycopg2
@@ -27,72 +26,32 @@ class question_object(object):
 
 
 class person_and_question(object):
-    def __init__(self, nickname, count=0, question=None, pack=0):
+    def __init__(self, nickname, question, count):
         self.nickname = nickname
-        self.count = count
         self.question = question
-        self.pack = pack
+        self.count = count
 
 
-questions_array0 = []
-questions_array1 = []
-questions_array2 = []
-questions_array3 = []
-
-persons_array = []
+questions_array = []
+persons_array = {}
 current_question = None
 
 
 def pars_answers():
-    global questions_array0
-    global questions_array1
-    global questions_array2
-    global questions_array3
+    global questions_array
+    questions_array = []
 
-    questions_array0 = []
-    questions_array1 = []
-    questions_array2 = []
-    questions_array3 = []
+    f1 = open("answers.txt", "r", encoding='utf-8')
+    f = f1.readlines()
 
-    f1 = open("answers 0.txt", "r", encoding='utf-8')
-    f1 = f1.readlines()
-
-    for line in f1:
+    for line in f:
         if '___' not in line:
             line = line.strip().split('\n')[0]
             current_string = line.strip().split('|')
             new_question = question_object(current_string[1], current_string[2], current_string[3], current_string[4])
-            questions_array0.append(new_question)
+            questions_array.append(new_question)
 
-    f1 = open("answers 1.txt", "r", encoding='utf-8')
-    f1 = f1.readlines()
-
-    for line in f1:
-        if '___' not in line:
-            line = line.strip().split('\n')[0]
-            current_string = line.strip().split('|')
-            new_question = question_object(current_string[1], current_string[2], current_string[3], current_string[4])
-            questions_array1.append(new_question)
-
-    f1 = open("answers 2.txt", "r", encoding='utf-8')
-    f1 = f1.readlines()
-
-    for line in f1:
-        if '___' not in line:
-            line = line.strip().split('\n')[0]
-            current_string = line.strip().split('|')
-            new_question = question_object(current_string[1], current_string[2], current_string[3], current_string[4])
-            questions_array2.append(new_question)
-
-    f1 = open("answers 3.txt", "r", encoding='utf-8')
-    f1 = f1.readlines()
-
-    for line in f1:
-        if '___' not in line:
-            line = line.strip().split('\n')[0]
-            current_string = line.strip().split('|')
-            new_question = question_object(current_string[1], current_string[2], current_string[3], current_string[4])
-            questions_array3.append(new_question)
+    return 0
 
 
 @dp.message_handler(commands=['start'])
@@ -126,38 +85,17 @@ async def add_question(message):
 
 async def test(message):
     global current_question
-    global persons_array
-
-    if message.text == 'Начать тест':
-        persons_array = []
-
-        print(f'--------------------------{datetime.datetime.now().time()}')
 
     current_person = message.from_user.mention
 
-    key = 0
-
-    for i in range(len(persons_array)):
-        if persons_array[i].nickname == current_person:
-            key = i
-
-    if key == 0:
-        key = len(persons_array)
+    if (current_person not in dict.fromkeys(persons_array)):
+        persons_array[current_person] = None
         print(current_person)
 
-        new_person = person_and_question(current_person, 0)
-        persons_array.append(new_person)
+    if message.text == 'Начать тест':
+        persons_array[current_person] = None
 
-    if message.text == 'пак 0':
-        persons_array[key].pack = 0
-    elif message.text == 'пак 1':
-        persons_array[key].pack = 1
-    elif message.text == 'пак 2':
-        persons_array[key].pack = 2
-    elif message.text == 'пак 3':
-        persons_array[key].pack = 3
-
-    current_question = persons_array[key].question
+    current_question = persons_array[current_person]
 
     if current_question:
         if current_question.rightanswer.lower() == message.text.lower():
@@ -168,18 +106,10 @@ async def test(message):
 
     #number = random.randint(0, len(questions_array) - 1)
     #current_question = questions_array[number]
-    if persons_array[key].pack == 0:
-        current_question = random.choice(questions_array0)
-    elif persons_array[key].pack == 1:
-        current_question = random.choice(questions_array1)
-    elif persons_array[key].pack == 2:
-        current_question = random.choice(questions_array2)
-    elif persons_array[key].pack == 3:
-        current_question = random.choice(questions_array3)
-        
+    current_question = random.choice(questions_array)
     answers = current_question.answers.split(', ')
 
-    persons_array[key].question = current_question
+    persons_array[current_person] = current_question
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
@@ -192,11 +122,7 @@ async def test(message):
     #print(answers)
 
     for i in new_range:
-        try:
-            markup.add(types.KeyboardButton(answers[i]))
-        except Exception:
-            print(f"error {current_question.formul}")
-
+        markup.add(types.KeyboardButton(answers[i]))
 
     await message.answer(current_question.formul, reply_markup=markup, parse_mode = 'HTML')
 
