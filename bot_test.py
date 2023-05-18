@@ -34,65 +34,33 @@ class person_and_question(object):
         self.pack = pack
 
 
-questions_array0 = []
+"""questions_array0 = []
 questions_array1 = []
 questions_array2 = []
-questions_array3 = []
+questions_array3 = []"""
+
+qa_all = [[] for i in range(0, 4)]
 
 persons_array = []
 current_question = None
 
 
 def pars_answers():
-    global questions_array0
-    global questions_array1
-    global questions_array2
-    global questions_array3
+    global qa_all
+    qa_all = [[] for i in range(0, 4)]
 
-    questions_array0 = []
-    questions_array1 = []
-    questions_array2 = []
-    questions_array3 = []
+    for i in range(0, 4):
+        f1 = open(f"answers {i}.txt", "r", encoding='utf-8')
+        f1 = f1.readlines()
 
-    f1 = open("answers 0.txt", "r", encoding='utf-8')
-    f1 = f1.readlines()
-
-    for line in f1:
-        if '___' not in line:
-            line = line.strip().split('\n')[0]
-            current_string = line.strip().split('|')
-            new_question = question_object(current_string[1], current_string[2], current_string[3], current_string[4])
-            questions_array0.append(new_question)
-
-    f1 = open("answers 1.txt", "r", encoding='utf-8')
-    f1 = f1.readlines()
-
-    for line in f1:
-        if '___' not in line:
-            line = line.strip().split('\n')[0]
-            current_string = line.strip().split('|')
-            new_question = question_object(current_string[1], current_string[2], current_string[3], current_string[4])
-            questions_array1.append(new_question)
-
-    f1 = open("answers 2.txt", "r", encoding='utf-8')
-    f1 = f1.readlines()
-
-    for line in f1:
-        if '___' not in line:
-            line = line.strip().split('\n')[0]
-            current_string = line.strip().split('|')
-            new_question = question_object(current_string[1], current_string[2], current_string[3], current_string[4])
-            questions_array2.append(new_question)
-
-    f1 = open("answers 3.txt", "r", encoding='utf-8')
-    f1 = f1.readlines()
-
-    for line in f1:
-        if '___' not in line:
-            line = line.strip().split('\n')[0]
-            current_string = line.strip().split('|')
-            new_question = question_object(current_string[1], current_string[2], current_string[3], current_string[4])
-            questions_array3.append(new_question)
+        for line in f1:
+            if '___' not in line:
+                line = line.strip().split('\n')[0]
+                current_string = line.strip().split('|')
+                new_question = question_object(current_string[1], current_string[2], current_string[3],
+                                               current_string[4])
+                for j in range(0, 4):
+                    qa_all[j].append(new_question)
 
 
 @dp.message_handler(commands=['start'])
@@ -168,14 +136,9 @@ async def test(message):
 
     #number = random.randint(0, len(questions_array) - 1)
     #current_question = questions_array[number]
-    if persons_array[key].pack == 0:
-        current_question = random.choice(questions_array0)
-    elif persons_array[key].pack == 1:
-        current_question = random.choice(questions_array1)
-    elif persons_array[key].pack == 2:
-        current_question = random.choice(questions_array2)
-    elif persons_array[key].pack == 3:
-        current_question = random.choice(questions_array3)
+
+
+    current_question = random.choice(qa_all[persons_array[key].pack])
         
     answers = current_question.answers.split(', ')
 
@@ -207,7 +170,7 @@ async def check_answer(message: types.Message):
         strings = message.text.split('|')
 
         new_question = question_object(strings[1], strings[2], strings[3], strings[4])
-        questions_array.append(new_question)
+        #questions_array.append(new_question)
         await message.answer("Вопрос добавлен!")
     else:
         await test(message)
