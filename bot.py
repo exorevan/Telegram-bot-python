@@ -5,65 +5,75 @@ from aiogram.types import InputFile
 
 import SQLfunctions
 import psycopg2 as psycopg2
-from aiogram import Bot, Dispatcher, executor, types
+import aiogram
+from aiogram import executor
 
 import config
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=config.TOKEN)
-dp = Dispatcher(bot)
-connection = None
-cursor = None
+bot: aiogram.Bot = aiogram.Bot(token=config.TOKEN)
+dp: aiogram.Dispatcher = aiogram.Dispatcher(bot)
+connection: psycopg2.extensions.connection | None
+cursor: psycopg2.extensions.cursor | None
 language_name = ""
 
 
-@dp.message_handler(commands=['start'])
-async def check_answer(message: types.Message):
+@dp.message_handler(commands=["start"])
+async def check_answer(message: aiogram.types.Message) -> None:
     global connection, cursor
 
     try:
-        connection = psycopg2.connect(
-            user=config.user, password=config.password, host=config.host, database=config.db_name
+        connection: psycopg2.extensions.connection = psycopg2.connect(
+            user=config.user,
+            password=config.password,
+            host=config.host,
+            database=config.db_name,
         )
 
-        cursor = connection.cursor()
+        cursor: psycopg2.extensions.cursor = connection.cursor()
 
-        await message.answer("Hi")
+        await message.answer(text="Hi")
 
         await new_question(message)
     except Exception as _ex:
-        await message.answer("Error")
+        await message.answer(text="Error")
 
 
-async def new_question(message):
+async def new_question(message) -> None:
     global language_name
 
-    image_number = SQLfunctions.return_random_image(cursor)
-    image_name = SQLfunctions.return_image_name(cursor, image_number)
-    language_name = SQLfunctions.return_image_language(cursor, image_number)
+    image_number: int = SQLfunctions.return_random_image(cursor)
+    image_name: str = SQLfunctions.return_image_name(cursor, image_number)
+    language_name: str = SQLfunctions.return_image_language(cursor, image_number)
 
     await message.answer("New question")
 
-    random_button = random.randint(1, 4)
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    random_button: int = random.randint(a=1, b=4)
+    markup: aiogram.types.ReplyKeyboardMarkup = aiogram.types.ReplyKeyboardMarkup(
+        resize_keyboard=True
+    )
 
     for i in range(4):
         if i == random_button:
-            markup.add(types.KeyboardButton(language_name))
+            markup.add(aiogram.types.KeyboardButton(language_name))
         else:
-            markup.add(SQLfunctions.return_language(cursor, SQLfunctions.return_random_language(cursor)))
+            markup.add(
+                SQLfunctions.return_language(
+                    cursor, number=SQLfunctions.return_random_language(cursor)
+                )
+            )
 
-    new_photo = InputFile("images/" + image_name + ".jpg")
+    new_photo: InputFile = InputFile(filename=f"images/{image_name}.jpg")
 
     await message.answer_photo(photo=new_photo, reply_markup=markup)
 
 
-@dp.message_handler(content_types=['text'])
-async def check_answer(message: types.Message):
+@dp.message_handler(content_types=["text"])
+async def check_answer(message: aiogram.types.Message) -> None:
     global language_name
 
-    await message.answer(language_name)
+    await message.answer(text=language_name)
     await new_question(message)
 
 

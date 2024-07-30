@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
@@ -10,7 +9,7 @@ class Question:
 
     formul: str
     number_of_answers: int
-    answers: List[str]
+    answers: list[str]
     right_answer: str
 
     def is_answer_correct(self, answer: str) -> bool:

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from loc_types.question import Question
 
@@ -12,7 +11,7 @@ class PersonAndQuestion:
 
     nickname: str
     question_count: int = 0
-    question: Optional[Question] = None
+    question: Question | None = None
     question_pack_number: int = 0
 
     def __post_init__(self):
